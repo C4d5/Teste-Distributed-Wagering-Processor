@@ -1,0 +1,68 @@
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: dwp-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: wagering
+      POSTGRES_PASSWORD: wagering_dev_password
+      POSTGRES_DB: wagering_db
+    ports:
+      - "5432:5432"
+    volumes:
+      # Persiste os dados entre reinícios do container.
+      - postgres_data:/var/lib/postgresql/data
+      # Scripts dentro de /docker-entrypoint-initdb.d rodam automaticamente
+      # na PRIMEIRA inicialização do container (banco vazio). Isso aplica
+      # nossa migration inicial sem precisarmos de uma ferramenta externa
+      # de migração neste MVP enxuto.
+      - ./migrations:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      # Garante que outros serviços (ex: a API) só subam depois que o
+      # Postgres estiver realmente pronto para aceitar conexões.
+      test: ["CMD-SHELL", "pg_isready -U wagering -d wagering_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # -------------------------------------------------------------------------
+  # LocalStack: simula o AWS SQS localmente, para que possamos desenvolver
+  # a parte de mensageria assíncrona sem precisar de uma conta AWS real.
+  # -------------------------------------------------------------------------
+  localstack:
+    image: localstack/localstack:3.0
+    container_name: dwp-localstack
+    restart: unless-stopped
+    environment:
+      # Habilita apenas o serviço SQS (reduz tempo de boot e uso de memória).
+      - SERVICES=sqs
+      - DEBUG=0
+      - DEFAULT_REGION=us-east-1
+      # Credenciais fake: o LocalStack não valida contra a AWS real.
+      - AWS_ACCESS_KEY_ID=test
+      - AWS_SECRET_ACCESS_KEY=test
+    ports:
+      # 4566 é o "edge port" único por onde todos os serviços da LocalStack
+      # (nesse caso, só o SQS) são acessados.
+      - "4566:4566"
+    volumes:
+      - localstack_data:/var/lib/localstack
+      # Scripts em /etc/localstack/init/ready.d/ rodam AUTOMATICAMENTE assim
+      # que o LocalStack termina de subir. Usamos isso para criar as filas
+      # SQS (com suas Dead Letter Queues) sem precisar de nenhum passo manual
+      # — ver localstack-init/create-queues.sh.
+      - ./localstack-init:/etc/localstack/init/ready.d:ro
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4566/_localstack/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+# -----------------------------------------------------------------------------
+# Volumes nomeados: garantem que os dados sobrevivam a um `docker compose down`
+# (sem a flag -v). Para resetar tudo do zero, use `docker compose down -v`.
+# -----------------------------------------------------------------------------
+volumes:
+  postgres_data:
+  localstack_data:
