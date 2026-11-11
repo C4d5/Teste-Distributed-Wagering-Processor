@@ -4,7 +4,7 @@ Este repositório contém a solução desenvolvida para o desafio técnico de pr
 
 ---
 
-## 🛠️ Tecnologias e Arquitetura
+## Tecnologias e Arquitetura
 
 O projeto foi construído utilizando uma stack moderna e enxuta, priorizando controle total sobre as transações e sem abstrações excessivas de ORMs pesados:
 
@@ -22,7 +22,7 @@ O projeto foi construído utilizando uma stack moderna e enxuta, priorizando con
 
 ---
 
-## 🤖 Transparência e Desenvolvimento com Assistência de IA
+## Transparência e Desenvolvimento com Assistência de IA
 
 Para maximizar a eficiência do tempo (*timebox*), manter um alto padrão de código limpo (*clean code*) e acelerar a implementação das camadas de mensageria assíncrona, este projeto contou com o apoio de ferramentas de Inteligência Artificial em planos gratuitos:
 
@@ -33,7 +33,7 @@ A combinação dessas ferramentas permitiu focar nas decisões críticas de enge
 
 ---
 
-## 🚀 Como Executar o Projeto Localmente
+## Como Executar o Projeto Localmente
 
 ### Pré-requisitos
 * Docker e Docker Compose instalados.
