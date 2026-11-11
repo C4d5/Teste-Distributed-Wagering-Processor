@@ -6,19 +6,19 @@ Este repositório contém a solução desenvolvida para o desafio técnico de pr
 
 ## Tecnologias e Arquitetura
 
-O projeto foi construído utilizando uma stack moderna e enxuta, priorizando controle total sobre as transações e sem abstrações excessivas de ORMs pesados:
+O projeto foi construído utilizando uma stack moderna, priorizando controle total sobre as transações e sem abstrações excessivas de ORMs pesados:
 
-* **Framework**: NestJS (TypeScript)[cite: 18]
-* **Banco de Dados**: PostgreSQL 16 (com queries em SQL puro via `pg.Pool`)[cite: 18]
-* **Mensageria**: AWS SQS (Simulado localmente via **LocalStack**)[cite: 5, 18]
+* **Framework**: NestJS (TypeScript)
+* **Banco de Dados**: PostgreSQL 16 (com queries em SQL puro via `pg.Pool`)
+* **Mensageria**: AWS SQS (Simulado localmente via **LocalStack**)
 * **Containerização**: Docker Compose
 
 ### Decisões de Arquitetura & Padrões Implementados
-1. **Concorrência Segura (Lock Pessimista)**: Utilização de `SELECT ... FOR UPDATE` por `wallet_id` dentro de transações atômicas para evitar *lost updates* e garantir consistência sob concorrência pesada[cite: 18, 46].
-2. **Precisão Monetária Absoluta**: Uso de `BIGINT` no banco de dados para representar **centavos** e o Value Object `Money` no domínio, eliminando completamente bugs de ponto flutuante (`float`/`number`)[cite: 18, 32].
-3. **Transactional Inbox**: Proteção atômica contra entregas duplicadas (*at-least-once*) da fila SQS utilizando a constraint única `(consumer_name, message_id)`[cite: 18].
-4. **Transactional Outbox**: Resolução do *dual write problem* gravando eventos de integração na mesma transação do ledger, publicados de forma assíncrona com retry e backoff exponencial[cite: 18].
-5. **Dead Letter Queues (DLQ)**: Configuração de políticas de repetição (`maxReceiveCount=5`) com encaminhamento automático para DLQs no LocalStack para falhas técnicas irrecuperáveis[cite: 18].
+1. **Concorrência Segura (Lock Pessimista)**: Utilização de `SELECT ... FOR UPDATE` por `wallet_id` dentro de transações atômicas para evitar *lost updates* e garantir consistência sob concorrência pesada.
+2. **Precisão Monetária Absoluta**: Uso de `BIGINT` no banco de dados para representar **centavos** e o Value Object `Money` no domínio, eliminando completamente bugs de ponto flutuante (`float`/`number`).
+3. **Transactional Inbox**: Proteção atômica contra entregas duplicadas (*at-least-once*) da fila SQS utilizando a constraint única `(consumer_name, message_id)`.
+4. **Transactional Outbox**: Resolução do *dual write problem* gravando eventos de integração na mesma transação do ledger, publicados de forma assíncrona com retry e backoff exponencial.
+5. **Dead Letter Queues (DLQ)**: Configuração de políticas de repetição (`maxReceiveCount=5`) com encaminhamento automático para DLQs no LocalStack para falhas técnicas irrecuperáveis.
 
 ---
 
@@ -37,9 +37,26 @@ A combinação dessas ferramentas permitiu focar nas decisões críticas de enge
 
 ### Pré-requisitos
 * Docker e Docker Compose instalados.
-* Node.js (versão 20+) e npm[cite: 15].
+* Node.js (versão 20+) e npm.
 
 ### 1. Subir a Infraestrutura (Postgres + LocalStack)
 Na raiz do projeto, execute o Docker Compose para subir o banco de dados e as filas SQS simuladas:
-```bash
-docker compose up -d
+
+```docker compose up -d ```
+
+
+### 2. Instalar as Dependências
+
+```npm install```
+
+
+### 3. Rodar os Testes de Concorrência
+O projeto possui testes automatizados que validam a integridade sob concorrência real:
+
+```npm test```
+
+
+### 4. Iniciar a Aplicação
+
+```npm run start:dev```
+
